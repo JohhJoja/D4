@@ -73,11 +73,16 @@ public class DB_data_generator {
                     String signetTo = getRandomFIO();
 
                     // Генерация случайной даты и времени
-                    String dateStr = "2024-04-" + (random.nextInt(30) + 1) + " " +
-                            new DecimalFormat("00").format(random.nextInt(23) + 1) + ":" +
-                            new DecimalFormat("00").format(random.nextInt(60)) + ":00";
+                    int year = random.nextInt(6) + 2020; // Случайный год от 2020 до 2025
+                    int month = random.nextInt(12) + 1; // Случайный месяц от 1 до 12
+                    int day = random.nextInt(28) + 1; // Случайный день, ограничим 28 днями для простоты (чтобы избежать переполнения месяцев)
+                    int hour = random.nextInt(24); // Случайный час от 0 до 23
+                    int minute = random.nextInt(60); // Случайная минута от 0 до 59
+                    int second = random.nextInt(60); // Случайная секунда от 0 до 59
 
+                    String dateStr = String.format("%04d-%02d-%02d %02d:%02d:%02d", year, month, day, hour, minute, second);
                     Timestamp timestamp = Timestamp.valueOf(dateStr);
+
 
                     int urgency = random.nextInt(5) + 1;
                     String group = getRandomGroup();
@@ -95,11 +100,11 @@ public class DB_data_generator {
 
                     if (i % 100 == 0) { // Каждые 100 записей отправляем в БД
                         statement.executeBatch();
-                        System.out.println("💾 Добавлено " + (i + 1) + " записей...");
+                        System.out.println(" Добавлено " + (i + 1) + " записей...");
                     }
                 }
                 statement.executeBatch(); // Отправляем оставшиеся записи
-                System.out.println("✅ Данные успешно добавлены!");
+                System.out.println(" Данные успешно добавлены!");
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -112,9 +117,7 @@ public class DB_data_generator {
                 MIDDLE_NAMES[random.nextInt(MIDDLE_NAMES.length)];
     }
 
-    private static String getRandomStatus() {
-        return STATUS_VALUES[random.nextInt(STATUS_VALUES.length)];
-    }
+    private static String getRandomStatus() {return STATUS_VALUES[random.nextInt(STATUS_VALUES.length)];}
 
     private static String getRandomGroup() {
         return GROUPS[random.nextInt(GROUPS.length)];
