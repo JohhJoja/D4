@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras.layers import Embedding, LSTM, Dense, Bidirectional, Attention
+from tensorflow.keras.layers import Embedding, LSTM, Dense, Bidirectional, Attention, Concatenate, Input
 import numpy as np
 import json
 import pickle
@@ -30,32 +30,41 @@ sql_vocab_size = len(sql_tokenizer.word_index) + 1
 
 # Создаем модель
 class SQLGenerator(keras.Model):
-    def __init__(self, text_vocab_size, sql_vocab_size):
+    def __init__(self, text_vocab_size, sql_vocab_size, embed_dim=128, lstm_units=128):
         super(SQLGenerator, self).__init__()
-        self.embedding = Embedding(input_dim=text_vocab_size, output_dim=128, input_length=30)
-        self.encoder = Bidirectional(LSTM(128, return_sequences=True, return_state=True))
-        self.attention = Attention()
-        self.decoder = LSTM(128, return_sequences=True, return_state=True)
+        self.embedding = Embedding(input_dim=text_vocab_size, output_dim=embed_dim, mask_zero=True)
+        self.encoder = Bidirectional(LSTM(lstm_units, return_sequences=True, return_state=True))
+        self.attention = Attention(use_scale=True)  # Используем масштабирование для внимания
+        self.decoder_lstm = LSTM(lstm_units * 2, return_sequences=True, return_state=True)
         self.dense = Dense(sql_vocab_size, activation="softmax")
 
     def call(self, inputs):
         x = self.embedding(inputs)
         encoder_output, forward_h, forward_c, backward_h, backward_c = self.encoder(x)
-        decoder_input = encoder_output  # Начинаем декодирование
-        context_vector = self.attention([decoder_input, encoder_output])
-        decoder_output, _, _ = self.decoder(context_vector)
+        hidden_state = Concatenate()([forward_h, backward_h])
+        cell_state = Concatenate()([forward_c, backward_c])
+        
+        # Преобразование перед входом в attention
+        context_vector = self.attention([encoder_output, encoder_output])  # query и key одинаковые
+        context_vector = tf.reduce_mean(context_vector, axis=1)  # Для упрощения можно взять среднее значение по оси 1
+        
+        # Преобразуем в 3D для LSTM
+        context_vector = tf.expand_dims(context_vector, axis=1)  # Добавляем дополнительную ось для временных шагов
+        
+        # Применяем декодер LSTM
+        decoder_output, _, _ = self.decoder_lstm(context_vector, initial_state=[hidden_state, cell_state])
         output = self.dense(decoder_output)
         return output
 
 # Инициализация модели
 model = SQLGenerator(text_vocab_size, sql_vocab_size)
-model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"])
+model.compile(optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
 
-# One-hot encoding для выхода
-y_one_hot = keras.utils.to_categorical(y, num_classes=sql_vocab_size)
+# Преобразуем выходные данные в одномерные метки для sparse_categorical_crossentropy
+y = np.expand_dims(y, -1)
 
 # Обучение
-model.fit(X, y_one_hot, epochs=50, batch_size=32)
+model.fit(X, y, epochs=50, batch_size=32)
 
 # Сохраняем модель и токенизаторы
 model.save("sql_generator.h5")
