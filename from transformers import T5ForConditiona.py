@@ -1,80 +1,59 @@
+import numpy as np
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras.layers import Embedding, LSTM, Dense, Bidirectional, Attention, Concatenate, Input
-import numpy as np
-import json
-import pickle
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Input, Embedding, LSTM, Dense, Bidirectional, Dropout
+from tensorflow.keras.callbacks import EarlyStopping
 
-# Загружаем обучающие данные
-with open("E:\Java\deeplomka\JDBC\dataset.json", "r", encoding="utf-8") as f:
-    dataset = json.load(f)
+# Текстовые данные и SQL
+data = [
+    {"text": "Найди, пожалуйста, заявку с кодом IM453779 и статусом ожидает в группе А для пользователя Артем Захарович Антонов", "sql": "SELECT * FROM tickets WHERE code = 'IM453779' AND status = 'ожидает' AND groupS = 'А' AND last_name = 'Антонов' AND first_name = 'Артем' AND middle_name = 'Захарович'"},
+    # Добавь все остальные строки из твоего датасета
+]
 
-texts = [item["text"] for item in dataset]
-sqls = [item["sql"] for item in dataset]
+# Разделим тексты на текст и sql
+texts = [entry["text"] for entry in data]
+sqls = [entry["sql"] for entry in data]
 
-# Токенизация входных данных
-text_tokenizer = keras.preprocessing.text.Tokenizer()
-text_tokenizer.fit_on_texts(texts)
-X = text_tokenizer.texts_to_sequences(texts)
-X = keras.preprocessing.sequence.pad_sequences(X, maxlen=15)
+# Токенизация
+tokenizer = Tokenizer(oov_token="<OOV>")
+tokenizer.fit_on_texts(texts + sqls)
 
-# Токенизация выходных данных
-sql_tokenizer = keras.preprocessing.text.Tokenizer()
-sql_tokenizer.fit_on_texts(sqls)
-y = sql_tokenizer.texts_to_sequences(sqls)
-y = keras.preprocessing.sequence.pad_sequences(y, maxlen=15)
+# Преобразуем тексты и SQL в последовательности
+text_sequences = tokenizer.texts_to_sequences(texts)
+sql_sequences = tokenizer.texts_to_sequences(sqls)
 
-# Размеры словарей
-text_vocab_size = len(text_tokenizer.word_index) + 1
-sql_vocab_size = len(sql_tokenizer.word_index) + 1
+# Приводим длину последовательностей к одной длине (например, maxlen = 30)
+maxlen = 30
+X = pad_sequences(text_sequences, maxlen=maxlen)
+y = pad_sequences(sql_sequences, maxlen=maxlen)
 
-# Преобразуем y в one-hot формат
-y = keras.utils.to_categorical(y, num_classes=sql_vocab_size)  # (batch_size, 15, sql_vocab_size)
+# Подготовим модель
+vocab_size = len(tokenizer.word_index) + 1  # Учтем OOV токен
 
-# Создаем модель
-class SQLGenerator(keras.Model):
-    def __init__(self, text_vocab_size, sql_vocab_size, embed_dim=128, lstm_units=128):
-        super(SQLGenerator, self).__init__()
-        self.embedding = Embedding(input_dim=text_vocab_size, output_dim=embed_dim, mask_zero=True)
-        self.encoder = Bidirectional(LSTM(lstm_units, return_sequences=True, return_state=True))
-        self.attention = Attention(use_scale=True)
-        self.decoder_lstm = LSTM(lstm_units * 2, return_sequences=True, return_state=True)  
-        self.dense = Dense(sql_vocab_size, activation="softmax")
+# Энкодер
+encoder_inputs = Input(shape=(maxlen,))
+x = Embedding(vocab_size, 128)(encoder_inputs)
+x = Bidirectional(LSTM(64, return_sequences=True))(x)
+x = Dropout(0.5)(x)
 
-    def call(self, inputs):
-        encoder_inputs, decoder_inputs = inputs  # Теперь два входа
+# Декодер
+decoder_lstm = LSTM(64, return_sequences=True)(x)
+decoder_dense = Dense(vocab_size, activation='softmax')(decoder_lstm)
 
-        # **Энкодер**
-        x = self.embedding(encoder_inputs)
-        encoder_output, forward_h, forward_c, backward_h, backward_c = self.encoder(x)
-        hidden_state = Concatenate()([forward_h, backward_h])
-        cell_state = Concatenate()([forward_c, backward_c])
+# Модель
+model = Model(encoder_inputs, decoder_dense)
 
-        # **Attention**
-        context_vector = self.attention([encoder_output, encoder_output])
-        context_vector = tf.reduce_mean(context_vector, axis=1)
-        context_vector = tf.expand_dims(context_vector, axis=1)
+# Компиляция модели
+model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
 
-        # **Декодер**
-        decoder_embedded = self.embedding(decoder_inputs)  # Входные данные декодера
-        decoder_lstm_output, _, _ = self.decoder_lstm(decoder_embedded, initial_state=[hidden_state, cell_state])
-        output = self.dense(decoder_lstm_output)  # Shape (batch_size, 15, sql_vocab_size)
+# Добавим callback для ранней остановки
+early_stopping = EarlyStopping(monitor='val_loss', patience=3)
 
-        return output
+# Обучение модели
+model.fit(X, np.expand_dims(y, -1), epochs=50, batch_size=32, validation_split=0.2, callbacks=[early_stopping])
 
-# **Создаем входные данные для декодера**
-decoder_input_data = np.pad(X[:, :-1], ((0, 0), (1, 0)), mode="constant")  # Сдвигаем на 1 шаг влево
-
-# **Инициализация модели**
-model = SQLGenerator(text_vocab_size, sql_vocab_size)
-model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"])
-
-# **Обучение**
-model.fit([X, decoder_input_data], y, epochs=50, batch_size=32)
-
-# **Сохранение**
-model.save("sql_generator.h5")
-with open("text_tokenizer.pkl", "wb") as f:
-    pickle.dump(text_tokenizer, f)
-with open("sql_tokenizer.pkl", "wb") as f:
-    pickle.dump(sql_tokenizer, f)
+# Сохраним модель
+model.save('sql_query_model.h5')

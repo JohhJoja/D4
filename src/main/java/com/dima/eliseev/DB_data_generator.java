@@ -108,6 +108,7 @@ public class DB_data_generator {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            System.out.println("problem!");
         }
     }
 
