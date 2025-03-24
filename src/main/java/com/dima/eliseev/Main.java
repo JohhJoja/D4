@@ -21,5 +21,8 @@ public class Main {
             }
         }
 
+        My_thread th1 = new My_thread();
+        th1.start();
+
     }
 }
