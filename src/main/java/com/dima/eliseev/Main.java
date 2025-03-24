@@ -10,19 +10,25 @@ public class Main {
         String NAME = "postgres";
         String PASSWORD = "1";
 
-        try (Connection connection = DriverManager.getConnection(URL, NAME, PASSWORD);
-            Statement statement = connection.createStatement()){
-            PreparedStatement preparedStatement = connection.prepareStatement("select * from Dimasik where NAME = ?");
-            preparedStatement.setString(1, "Dimasik");
-            ResultSet resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()){
-                System.out.println(resultSet.getString(1));
-                System.out.println(resultSet.getString(2));
-            }
-        }
-
         My_thread th1 = new My_thread();
         th1.start();
+
+        try (Connection connection = DriverManager.getConnection(URL, NAME, PASSWORD);
+            Statement statement = connection.createStatement()){
+            PreparedStatement preparedStatement = connection.prepareStatement("select * from mock_data");
+          //  preparedStatement.setString(1, "Dimasik");
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()){
+                Thread.sleep(100);
+                System.out.println(resultSet.getString(1));
+                System.out.println(resultSet.getString(2));
+                System.out.println(resultSet.getString(3));
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        th1.run_ = false;
 
     }
 }
