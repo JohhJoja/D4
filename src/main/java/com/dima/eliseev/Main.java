@@ -1,5 +1,11 @@
 package com.dima.eliseev;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.sql.*;
 
 public class Main {
@@ -10,25 +16,22 @@ public class Main {
         String NAME = "postgres";
         String PASSWORD = "1";
 
-        My_thread th1 = new My_thread();
-        th1.start();
-
         try (Connection connection = DriverManager.getConnection(URL, NAME, PASSWORD);
             Statement statement = connection.createStatement()){
-            PreparedStatement preparedStatement = connection.prepareStatement("select * from mock_data");
-          //  preparedStatement.setString(1, "Dimasik");
-            ResultSet resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()){
-                Thread.sleep(100);
-                System.out.println(resultSet.getString(1));
-                System.out.println(resultSet.getString(2));
-                System.out.println(resultSet.getString(3));
-            }
-        } catch (InterruptedException e) {
+           // statement.executeUpdate("create table blobi (id bigserial primary key, name varchar(50), img bytea)");
+
+            BufferedImage img = ImageIO.read(new File("E:\\Java\\deeplomka\\JDBC\\src\\main\\resources\\img.jpg"));
+
+            ByteArrayOutputStream babun = new ByteArrayOutputStream();
+            ImageIO.write(img, "jpg", babun);
+            byte[] imageBytes = babun.toByteArray();
+
+            PreparedStatement preparedStatement = connection.prepareStatement("insert into blobi (name, img) values (?,?)");
+            preparedStatement.setString(1,"Dimasik");
+            preparedStatement.setBytes(2,imageBytes);
+            preparedStatement.execute();
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
-        th1.run_ = false;
-
     }
 }
