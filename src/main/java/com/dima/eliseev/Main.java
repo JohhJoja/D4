@@ -12,7 +12,9 @@ public class Main {
 
         try (Connection connection = DriverManager.getConnection(URL, NAME, PASSWORD);
             Statement statement = connection.createStatement()){
-            ResultSet resultSet = statement.executeQuery("select * from Dimasik");
+            PreparedStatement preparedStatement = connection.prepareStatement("select * from Dimasik where NAME = ?");
+            preparedStatement.setString(1, "Dimasik");
+            ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()){
                 System.out.println(resultSet.getString(1));
                 System.out.println(resultSet.getString(2));
