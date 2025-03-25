@@ -39,9 +39,7 @@ public class Main {
 //        }
 
         try (Connection connection = DriverManager.getConnection(URL, NAME, PASSWORD); Statement statement = connection.createStatement()){
-
-            ResultSet resultSet = statement.executeQuery("");
-
+            
         }
     }
 }
