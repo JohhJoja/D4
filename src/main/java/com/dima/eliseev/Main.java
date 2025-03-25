@@ -16,26 +16,17 @@ public class Main {
         try (Connection connection = DriverManager.getConnection(URL, NAME, PASSWORD);
              Statement statement = connection.createStatement()){
 
-            Statement stat = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            Statement statement1 = connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
 
-            ResultSet resultSet = stat.executeQuery("Select * from blobi");
-            if (resultSet.next()){
-                System.out.println(resultSet.getString(1) + " " + resultSet.getString(2));
-            }
-            if (resultSet.previous()){
-                System.out.println(resultSet.getString(1) + " " + resultSet.getString(2));
-            }
+            connection.setAutoCommit(false);
+            statement1.executeUpdate("INSERT INTO dimasik (name, age) values ('Dimass', 39)");
+            statement1.executeUpdate("INSERT INTO dimasik (name, age) values ('Anananananaaaa', 9)");
+            statement1.executeUpdate("INSERT INTO dimasik (name, age) values ('Chuchpan', 3)");
+
+            connection.commit();
+
         }
-//             PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM test1()")) {
-//
-//            boolean hasNext = preparedStatement.execute();
-//            ResultSet resultSet = preparedStatement.getResultSet();
-//            while (hasNext){
-//                while (resultSet.next()) {
-//                    System.out.println(resultSet.getString(1) + " " + resultSet.getString(2));
-//                }
-//                hasNext = preparedStatement.getMoreResults();
-//            }
+
 
 
 
