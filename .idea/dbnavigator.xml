@@ -6,7 +6,7 @@
   </component>
   <component name="DBNavigator.Project.DataEditorManager">
     <record-view-column-sorting-type value="BY_INDEX" />
-    <value-preview-text-wrapping value="true" />
+    <value-preview-text-wrapping value="false" />
     <value-preview-pinned value="false" />
   </component>
   <component name="DBNavigator.Project.DatabaseAssistantManager">
@@ -31,19 +31,16 @@
     </connection>
     <connection id="5af6794f-c133-4eb2-9b2d-20534a1cb8fc">
       <console name="Connection 2" type="STANDARD" schema="JDBC" session="Main"><![CDATA[SELECT * FROM blobi]]></console>
-      <console name="Connection 2 1" type="STANDARD" schema="JDBC" session="Main"><![CDATA[CREATE OR REPLACE FUNCTION test1(IN ID int, OUT id_ int, OUT name_ varchar) AS 
-$$
-BEGIN
-    select blobi.id, blobi.name into id_, name_ from publick.blobi where blobi.id = test1.ID;
-END;
-$$ LANGUAGE plpgsql;]]></console>
+      <console name="Connection 2 1" type="STANDARD" schema="JDBC" session="Main"><![CDATA[select * from public.dimasik]]></console>
     </connection>
   </component>
   <component name="DBNavigator.Project.DatabaseEditorStateManager">
     <last-used-providers />
   </component>
   <component name="DBNavigator.Project.DatabaseFileManager">
-    <open-files />
+    <open-files>
+      <object connection-id="5af6794f-c133-4eb2-9b2d-20534a1cb8fc" object-ref="consoles/Connection 2 1" />
+    </open-files>
   </component>
   <component name="DBNavigator.Project.DatabaseSessionManager">
     <connection id="6d7273f5-74dd-46a3-8411-5026d50f2d62" />
@@ -56,6 +53,7 @@ $$ LANGUAGE plpgsql;]]></console>
         <condition column="id" operator="=" value="" active="true" />
       </filter>
     </filter-actions>
+    <filter-actions connection-id="5af6794f-c133-4eb2-9b2d-20534a1cb8fc" dataset="public.dimasik" active-filter-id="" />
   </component>
   <component name="DBNavigator.Project.ExecutionManager">
     <retain-sticky-names value="false" />
@@ -72,7 +70,7 @@ $$ LANGUAGE plpgsql;]]></console>
           <description value="My test DB" />
           <database-type value="POSTGRES" />
           <config-type value="BASIC" />
-          <database-version value="9999.0" />
+          <database-version value="17.2" />
           <driver-source value="BUNDLED" />
           <driver-library value="" />
           <driver value="" />
@@ -87,7 +85,7 @@ $$ LANGUAGE plpgsql;]]></console>
           <token-type value="" />
           <token-config-file value="" />
           <token-profile value="" />
-          <session-user value="" />
+          <session-user value="postgres" />
         </database>
         <properties>
           <auto-commit value="false" />
@@ -173,7 +171,7 @@ $$ LANGUAGE plpgsql;]]></console>
           <description value="" />
           <database-type value="POSTGRES" />
           <config-type value="BASIC" />
-          <database-version value="9999.0" />
+          <database-version value="17.2" />
           <driver-source value="BUNDLED" />
           <driver-library value="" />
           <driver value="" />
@@ -188,7 +186,7 @@ $$ LANGUAGE plpgsql;]]></console>
           <token-type value="" />
           <token-config-file value="" />
           <token-profile value="" />
-          <session-user value="" />
+          <session-user value="postgres" />
         </database>
         <properties>
           <auto-commit value="false" />
