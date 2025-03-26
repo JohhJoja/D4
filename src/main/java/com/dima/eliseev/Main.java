@@ -20,9 +20,11 @@ public class Main {
 
             connection.setAutoCommit(false);
             statement1.executeUpdate("INSERT INTO dimasik (name, age) values ('Dimass', 39)");
+            Savepoint savepoint = connection.setSavepoint();
             statement1.executeUpdate("INSERT INTO dimasik (name, age) values ('Anananananaaaa', 9)");
             statement1.executeUpdate("INSERT INTO dimasik (name, age) values ('Chuchpan', 3)");
 
+            connection.rollback(savepoint); //откат изменений
             connection.commit();
 
         }
