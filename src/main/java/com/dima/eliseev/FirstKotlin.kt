@@ -59,11 +59,36 @@ fun main(){
 
     val My = MyFirstKotlinClass("Dimas", 10)
     My.WhoIam()
+
+    Car("Dimasik")
 }
 
 class MyFirstKotlinClass(var name: String,var age: Int){
+    init {
+        println("I'm alive!")
+    }
+    constructor(name: String) : this(name, 21)
     fun WhoIam(){
         println("I'm $name and i'm $age old")
+    }
+}
+interface VEHICLo{
+    fun DO()
+}
+open class Vehicl(var maker: String) : VEHICLo{
+    open fun Rider(){
+        println("I ride a vehicle, which make $maker")
+    }
+    override fun DO() {
+        TODO("Not yet implemented")
+    }
+}
+class Car(maker: String): Vehicl(maker){
+    override fun Rider() {
+        println("I ride a car, which make $maker")
+    }
+    init {
+        Rider()
     }
 }
 
