@@ -23,5 +23,7 @@ public class Singleton {
         inst1.HIA();
         inst2.HIA();
         inst3.HIA();
+
+        Builder b = new Builder.BuilderPattern().BuilderPatternSetAge(10).build();
     }
 }
