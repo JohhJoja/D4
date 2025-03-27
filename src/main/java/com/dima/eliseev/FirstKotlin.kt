@@ -91,5 +91,3 @@ class Car(maker: String): Vehicl(maker){
         Rider()
     }
 }
-
-
