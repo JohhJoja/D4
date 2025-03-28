@@ -1,4 +1,4 @@
-package com.dima.eliseev;
+package com.dima.eliseev.factory;
 
 interface Vehicle{
     void drive();
